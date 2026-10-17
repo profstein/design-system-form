@@ -1,147 +1,40 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Choose typography, color, and spacing for an MMP 240 website, then export matching CSS, Figma tokens, and design.md.">
-    <title>Design choices · MMP 240</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="fonts.js" defer></script>
-    <script src="app.js" defer></script>
-  </head>
-  <body>
-    <a class="skip-link" href="#choices">Skip to design choices</a>
-    <header class="app-header">
-      <a class="wordmark" href="#choices"><span aria-hidden="true">Aa</span> Design choices</a>
-      <span class="course-label">MMP 240 · Project 1</span>
-      <a class="jump-link" href="#exports">Get your files ↓</a>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Choose the MMP 240 design system form for your project. Create matching CSS, Figma tokens, and a design guide.">
+  <title>Design System Forms · MMP 240</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="app-header">
+      <a class="wordmark" href="index.html"><span aria-hidden="true">Aa</span> Design choices</a>
+      <nav class="site-nav" aria-label="Main navigation"><a href="index.html" aria-current="page">Home</a><a href="project-1.html">Project 1</a><a href="project-2.html">Project 2</a></nav>
     </header>
-
-    <main class="workspace">
-      <div class="intro">
-        <p class="eyebrow">One system, three files</p>
-        <h1>Design System Form</h1>
-        <p>This form helps you to choose type, color, and spacing options. See them together, then download or copy your choices in three formats for web pages, Figma and generative AI. Complete all of the fields and then download the files at the end.</p>
-      </div>
-
-      <div class="studio">
-        <form id="choices" class="controls">
-          <div class="system-name">
-            <span class="step">STEP 00</span>
-            <h2>Name</h2>
-            <label for="name">Name your design system</label>
-            <input id="name" name="name" value="My web guide" maxlength="80">
-          </div>
-
-          <fieldset>
-            <legend><span class="step">STEP 01</span></legend>
-            <h2>Typography</h2>
-            <p class="section-help">Choose one font for headings and one for body text, then set a shared base size and heading scale.</p>
-            <datalist id="font-catalog"></datalist>
-            <div class="two-fields">
-              <div>
-                <label for="heading-font">Heading font</label>
-                <input id="heading-font" name="headingFont" list="font-catalog" value="Playfair Display">
-              </div>
-              <div>
-                <label for="body-font">Body font</label>
-                <input id="body-font" name="bodyFont" list="font-catalog" value="Source Sans 3">
-              </div>
-            </div>
-            <p class="hint">Type to search Google Fonts. Check that each font is available in Figma.</p>
-            <div class="two-fields">
-              <div>
-                <label for="root-size">Base (root) font size</label>
-                <select id="root-size" name="rootSize">
-                  <option value="14">14px</option><option value="16" selected>16px</option><option value="18">18px</option><option value="20">20px</option>
-                </select>
-                <p class="hint">This sets the browser root size. The other type sizes use rem so they all scale together.</p>
-              </div>
-              <div>
-                <label for="type-scale">Type scale</label>
-                <select id="type-scale" name="typeScale">
-                  <option value="1.067">Minor second · 1.067</option><option value="1.125">Major second · 1.125</option>
-                  <option value="1.2">Minor third · 1.2</option><option value="1.25" selected>Major third · 1.25</option>
-                  <option value="1.333">Perfect fourth · 1.333</option><option value="1.414">Augmented fourth · 1.414</option><option value="1.5">Perfect fifth · 1.5</option><option value="1.618">Golden ratio · 1.618</option>
-                </select>
-              </div>
-            </div>
-            <div class="heading-sizes">
-              <p class="section-help">Choose a type-scale size for each heading.</p>
-              <div><label for="size-h1">h1</label><select id="size-h1" name="h1"><option>xs</option><option>sm</option><option>md</option><option>lg</option><option>xl</option><option>xxl</option><option selected>xxxl</option></select></div>
-              <div><label for="size-h2">h2</label><select id="size-h2" name="h2"><option>xs</option><option>sm</option><option>md</option><option>lg</option><option>xl</option><option selected>xxl</option><option>xxxl</option></select></div>
-              <div><label for="size-h3">h3</label><select id="size-h3" name="h3"><option>xs</option><option>sm</option><option>md</option><option>lg</option><option selected>xl</option><option>xxl</option><option>xxxl</option></select></div>
-              <div><label for="size-h4">h4</label><select id="size-h4" name="h4"><option>xs</option><option>sm</option><option>md</option><option selected>lg</option><option>xl</option><option>xxl</option><option>xxxl</option></select></div>
-              <div><label for="size-h5">h5</label><select id="size-h5" name="h5"><option>xs</option><option>sm</option><option selected>md</option><option>lg</option><option>xl</option><option>xxl</option><option>xxxl</option></select></div>
-              <div><label for="size-h6">h6</label><select id="size-h6" name="h6"><option>xs</option><option selected>sm</option><option>md</option><option>lg</option><option>xl</option><option>xxl</option><option>xxxl</option></select></div>
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend><span class="step">STEP 02</span></legend>
-            <h2>Color Palette</h2>
-            <p class="section-help">Set your color palette for the major interface elements.</p>
-            <div class="color-fields">
-              <div class="color-field"><input type="color" id="default-text-picker" value="#182638"><div><label for="default-text">Default Text</label><input id="default-text" name="defaultText" class="hex" value="#182638" maxlength="7"></div></div>
-              <div class="color-field"><input type="color" id="default-background-picker" value="#FFFFFF"><div><label for="default-background">Default Background</label><input id="default-background" name="defaultBackground" class="hex" value="#FFFFFF" maxlength="7"></div></div>
-              <div class="color-field"><input type="color" id="alternate-text-picker" value="#4A586B"><div><label for="alternate-text">Alternate Text</label><input id="alternate-text" name="alternateText" class="hex" value="#4A586B" maxlength="7"></div></div>
-              <div class="color-field"><input type="color" id="alternate-background-picker" value="#EDF2F7"><div><label for="alternate-background">Alternate Background</label><input id="alternate-background" name="alternateBackground" class="hex" value="#EDF2F7" maxlength="7"></div></div>
-              <div class="color-field"><input type="color" id="action-picker" value="#2055A5"><div><label for="action">Links and buttons</label><input id="action" name="action" class="hex" value="#2055A5" maxlength="7"></div></div>
-              <div class="color-field"><input type="color" id="hover-picker" value="#163D79"><div><label for="hover">Links and buttons on hover</label><input id="hover" name="hover" class="hex" value="#163D79" maxlength="7"></div></div>
-              <div class="color-field"><input type="color" id="button-text-picker" value="#FFFFFF"><div><label for="button-text">Button text</label><input id="button-text" name="buttonText" class="hex" value="#FFFFFF" maxlength="7"></div></div>
-            </div>
-            <h3>Accessibility Contrast Check</h3>
-            <div id="contrast-summary" class="contrast-summary"></div>
-          </fieldset>
-
-          <fieldset>
-            <legend><span class="step">STEP 03</span></legend>
-            <h2>Spacing</h2>
-            <p class="section-help">Repeat a small set of distances to group related ideas and separate sections.</p>
-            <div class="two-fields">
-              <div><label for="line-height">Default line height</label><select id="line-height" name="lineHeight"><option value="1.4">1.4</option><option value="1.5">1.5</option><option value="1.6" selected>1.6</option><option value="1.7">1.7</option><option value="1.8">1.8</option></select></div>
-              <div><label for="page-width">Default page width</label><select id="page-width" name="pageWidth"><option value="640">640px</option><option value="720">720px</option><option value="960" selected>960px</option><option value="1200">1200px</option></select></div>
-            </div>
-            <label for="spacing">Spacing rhythm</label><select id="spacing" name="space"><option value="4" selected>Compact · 4px base</option><option value="6">Comfortable · 6px base</option><option value="8">Spacious · 8px base</option></select>
-            <div id="spacing-ruler" class="spacing-ruler"></div>
-          </fieldset>
-
-          <fieldset>
-            <legend><span class="step">STEP 04</span></legend>
-            <h2>Description</h2>
-            <label for="intent">What should this design feel like, and who is it for?</label>
-            <textarea id="intent" name="intent" rows="3" maxlength="500">Change this to name your audience and describe how your design should feel to them.</textarea>
-            <p class="hint">This note goes into design.md. You do not need to write the file yourself.</p>
-          </fieldset>
-        </form>
-
-        <aside class="preview-column" aria-label="Live design preview">
-          <div class="preview-sticky">
-            <div class="preview-toolbar"><span><span class="live-dot"></span> Live Example</span><button id="width-toggle" type="button">Try narrow width</button></div>
-            <p id="preview-notice" class="preview-notice" hidden></p>
-            <div class="preview-canvas"><iframe id="preview" title="Website preview using your exported CSS" sandbox></iframe></div>
-            <div id="type-key" class="type-key"></div>
-            <p class="hint">This specimen uses your exported stylesheet. Changes stay on this page until you leave; download your files before closing.</p>
-          </div>
-        </aside>
-      </div>
-
-      <section class="exports" id="exports">
-        <div class="export-heading"><div><h2>Download your choices in three formats</h2></div><span class="file-count">CSS + Figma + design.md</span></div>
-        <div id="errors" class="error-box" hidden></div>
-        <p id="warning" class="warning" hidden></p>
-        <div class="export-cards">
-          <div><span class="file-tag">style.css</span><h3>For your website</h3><p>Basic CSS rules that apply your choices to your HTML.</p><button data-download="style.css" type="button">Download</button></div>
-          <div><span class="file-tag">design-tokens.json</span><h3>For your Figma file</h3><p>This file can be imported to set variables in Figma.</p><button data-download="design-tokens.json" type="button">Download</button></div>
-          <div><span class="file-tag">design.md</span><h3>For your project folder</h3><p>This is designed to help AI understand your design choices, and is also human readable.</p><button data-download="design.md" type="button">Download</button></div>
-        </div>
-        <h2>View and Copy Files</h2>
-        <div class="code-toolbar">
-          <label for="export-format">Choose file to view</label><select id="export-format"><option>style.css</option><option>design-tokens.json</option><option>design.md</option></select><button id="copy" type="button">Copy file</button></div>
-        <textarea id="code-output" class="code-output" aria-label="Generated file contents" readonly spellcheck="false"></textarea>
-        <output id="status" class="copy-status">The browser doesn't save your choices if you close or reload this page. Also, if you change your mind, then download all three files again.</output>
-      </section>
-    </main>
-    <footer class="app-footer"><span>Project 1 · Design choices tool</span></footer>
-  </body>
+  <main id="main" class="workspace home-workspace">
+    <div class="intro">
+      <p class="eyebrow">MMP 240 · Design choices</p>
+      <h1>A design system for your website</h1>
+      <p>Choose fonts, colors, and spacing, then see how they work together. Each form creates three matching files: a stylesheet for your website, design tokens for Figma, and a human-readable design.md guide to help you and AI follow your design choices.</p>
+    </div>
+    <p class="project-notice">Use the form assigned in the LMS. Each project has its own page and stylesheet format.</p>
+    <div class="project-cards">
+      <article class="project-card">
+        <p class="eyebrow">Project 1</p>
+        <h2>Start with the foundations</h2>
+        <p>Choose typography, a color palette, and a spacing rhythm. Export basic CSS with direct values as you learn to style your pages.</p>
+        <a class="card-link" href="project-1.html">Open Project 1 form <span aria-hidden="true">→</span></a>
+      </article>
+      <article class="project-card">
+        <p class="eyebrow">Project 2</p>
+        <h2>Build a shared design system</h2>
+        <p>Bring your typography, color, spacing, and layout decisions together. Export CSS variables in tokens.css and a design guide to support consistent pages and working with AI.</p>
+        <a class="card-link" href="project-2.html">Open Project 2 form <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </main>
+  <footer class="app-footer"><span>MMP 240 · Design system forms</span></footer>
+</body>
 </html>

@@ -7,6 +7,11 @@ const colorLabels = {
   action: 'Links and buttons', hover: 'Links and buttons on hover', buttonText: 'Button text'
 };
 
+const isProject2 = document.body.dataset.project === '2';
+if (isProject2) Object.assign(colorLabels, {
+  alternateAction: 'Alternate links', alternateHover: 'Alternate links hover', alternateButtonText: 'Alternate buttons'
+});
+
 let narrow = false;
 let files = {};
 let isValid = true;
@@ -18,6 +23,7 @@ function readDesign() {
     headingFont: form.headingFont.value.trim(), bodyFont: form.bodyFont.value.trim(),
     rootSize: Number(form.rootSize.value), typeScale: Number(form.typeScale.value),
     lineHeight: Number(form.lineHeight.value), space: Number(form.space.value), pageWidth: Number(form.pageWidth.value),
+    ...(isProject2 ? { gridGap: form.gridGap.value, sectionSpacing: form.sectionSpacing.value, contentPadding: form.contentPadding.value, headingLineHeight: Number(form.headingLineHeight.value) } : {}),
     headingSizes: Object.fromEntries(headingTags.map((tag) => [tag, form[tag].value])),
     colors: Object.fromEntries(Object.keys(colorLabels).map((key) => [key, form[key].value.toUpperCase()]))
   };
@@ -29,6 +35,11 @@ function validate(design) {
   if (design.intent.length > 500) errors.push('Keep the design intention under 500 characters.');
   for (const key of ['headingFont', 'bodyFont']) if (!window.fontCatalog.includes(design[key])) errors.push(`Choose a catalog font for ${key === 'headingFont' ? 'heading text' : 'body text'}.`);
   for (const [key, label] of Object.entries(colorLabels)) if (!/^#[\da-f]{6}$/i.test(design.colors[key])) errors.push(`${label} needs a six-digit hex color, such as #2055A5.`);
+  if (isProject2) {
+    for (const [key, label] of [['lineHeight', 'Default line height'], ['headingLineHeight', 'Heading line height'], ['pageWidth', 'Default page width']]) {
+      if (!Number.isFinite(design[key]) || design[key] <= 0) errors.push(`${label} must be a positive number${key === 'pageWidth' ? ' in pixels' : ' without units'}.`);
+    }
+  }
   return errors;
 }
 
@@ -38,6 +49,7 @@ function typeScale(design) {
   return { xs: round(md / ratio ** 2), sm: round(md / ratio), md, lg: round(md * ratio), xl: round(md * ratio ** 2), xxl: round(md * ratio ** 3), xxxl: round(md * ratio ** 4) };
 }
 function spacing(design) {
+  if (isProject2) return Object.fromEntries([1, 2, 3, 4, 6, 8, 12, 16, 24, 32].map((step) => [step, step * design.space / design.rootSize]));
   const multiplier = design.space / 4;
   return { sm: .75 * multiplier, md: multiplier, lg: 2 * multiplier, xl: 3 * multiplier, xxl: 4 * multiplier };
 }
@@ -111,7 +123,7 @@ button:hover, .button:hover {
 }
 `;
 }
-function css(design) { return `@import url("${fontUrl(design)}");\n\n/* Generated design choices. Save as style.css and link it in each HTML head. */\n\n${cssRules(design)}`; }
+function css(design) { if (isProject2) return project2Css(design); return `@import url("${fontUrl(design)}");\n\n/* Generated design choices. Save as style.css and link it in each HTML head. */\n\n${cssRules(design)}`; }
 function channels(hex) { return [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16) / 255); }
 function contrast(first, second) {
   const luminance = (hex) => channels(hex).map((value) => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, .7152, .0722][index], 0);
@@ -123,6 +135,16 @@ function contrastChecks(design) {
     ['action', 'defaultBackground', 'Links and buttons on Default Background'], ['hover', 'defaultBackground', 'Links and buttons on hover on Default Background'],
     ['buttonText', 'action', 'Button text'], ['buttonText', 'hover', 'Button text on hover']
   ];
+  if (isProject2) {
+    const [alternateTextPair] = pairs.splice(1, 1);
+    pairs.push(
+      alternateTextPair,
+      ['alternateAction', 'alternateBackground', 'Alternate links on Alternate Background'],
+      ['alternateHover', 'alternateBackground', 'Alternate links hover on Alternate Background'],
+      ['alternateButtonText', 'alternateAction', 'Alternate button text'],
+      ['alternateButtonText', 'alternateHover', 'Alternate button text on hover']
+    );
+  }
   return pairs.map(([foreground, background, label]) => ({ label, ratio: contrast(design.colors[foreground], design.colors[background]), pass: contrast(design.colors[foreground], design.colors[background]) >= 4.5 }));
 }
 function tokenTree(design) {
@@ -133,6 +155,7 @@ function tokenTree(design) {
     group[last] = { $type: type, $value: value, $description: description };
   };
   const tokenPaths = { defaultText: 'color/text/default', defaultBackground: 'color/background/default', alternateText: 'color/text/alternate', alternateBackground: 'color/background/alternate', action: 'color/action/primary', hover: 'color/action/hover', buttonText: 'color/text/button' };
+  if (isProject2) Object.assign(tokenPaths, { alternateAction: 'color/action/alternate', alternateHover: 'color/action/alternate-hover', alternateButtonText: 'color/text/alternate-button' });
   for (const [key, label] of Object.entries(colorLabels)) put(tokenPaths[key], 'color', { colorSpace: 'srgb', components: channels(design.colors[key]), alpha: 1, hex: design.colors[key] }, label);
   put('font/family/heading', 'fontFamily', design.headingFont, 'Heading font family'); put('font/family/body', 'fontFamily', design.bodyFont, 'Body font family');
   const sizes = typeScale(design);
@@ -140,30 +163,46 @@ function tokenTree(design) {
   put('font/size/body', 'dimension', { value: design.rootSize, unit: 'px' }, 'Body type size');
   put('font/size/small', 'dimension', { value: sizes.sm, unit: 'px' }, 'Small type size');
   for (const tag of headingTags) put(`font/size/${tag}`, 'dimension', { value: sizes[design.headingSizes[tag]], unit: 'px' }, `${tag} type size`);
-  for (const [key, value] of Object.entries(spacing(design))) put(`space/${key}`, 'dimension', { value: value * design.rootSize, unit: 'px' }, `${key} spacing`);
-  put('layout/page-width', 'dimension', { value: design.pageWidth, unit: 'px' }, 'Default page width'); return root;
+  for (const [key, value] of Object.entries(spacing(design))) put(`space/${key}`, 'dimension', { value: isProject2 ? Number(key) * design.space : value * design.rootSize, unit: 'px' }, `${key} spacing`);
+  put('layout/page-width', 'dimension', { value: design.pageWidth, unit: 'px' }, 'Default page width');
+  if (isProject2) {
+    put('font/line-height/base', 'number', design.lineHeight, 'Body line height multiplier');
+    put('font/line-height/headings', 'number', design.headingLineHeight, 'Heading line height multiplier');
+    put('layout/grid-gap', 'dimension', { value: Number(design.gridGap) * design.space, unit: 'px' }, 'Gap between grid items');
+    put('layout/section-spacing', 'dimension', { value: Number(design.sectionSpacing) * design.space, unit: 'px' }, 'Space between sections');
+    put('layout/content-padding', 'dimension', { value: Number(design.contentPadding) * design.space, unit: 'px' }, 'Default padding inside sections');
+  }
+  return root;
 }
 function designMd(design) {
   const sizes = typeScale(design), spaces = spacing(design);
   return `---\nversion: alpha\nname: ${JSON.stringify(design.name)}\ndescription: ${JSON.stringify(design.intent)}\nomitted: [rounded]\ncolors:\n${Object.entries(design.colors).map(([key, value]) => `  ${key}: ${JSON.stringify(value)}`).join('\n')}\ntypography:\n  rootSize: ${design.rootSize}px\n\nfontFamilies:\n  body: ${JSON.stringify(design.bodyFont)}\n  headings: ${JSON.stringify(design.headingFont)}\n\nsizes:\n  body: 1rem\n  small: ${round(sizes.sm / design.rootSize)}rem\n${headingTags.map((tag) => `  ${tag}: ${round(sizes[design.headingSizes[tag]] / design.rootSize)}rem`).join('\n')}\n\nspacing:\n${Object.entries(spaces).map(([key, value]) => `  ${key}: ${value}rem`).join('\n')}\n---\n\n## Overview\n\n${design.intent || 'Use the selected type, color, and spacing consistently across the three-page website.'}\n\n## Colors\n\nDefault colors apply to the page. Alternate colors apply to grouped sections. Links and buttons use the action color, then hover on pointer hover. Button text uses buttonText. Keep links underlined.\n\n${contrastChecks(design).map((check) => `- ${check.label}: ${check.ratio.toFixed(2)}:1 — ${check.pass ? 'meets' : 'below'} the 4.5:1 target for normal text.`).join('\n')}\n\n## Typography\n\nThe base font size is ${design.rootSize}px. Use ${design.bodyFont} for body text and ${design.headingFont} for headings. All size values use rem so changing the root size scales the full type system.\n\n## Layout\n\nDefault line height is ${design.lineHeight}. Default page width is ${design.pageWidth}px. Use the spacing scale for gaps and padding: ${Object.entries(spaces).map(([key, value]) => `${key} ${value}rem`).join(', ')}.\n\n## Do and Don't\n\n### Do\n\n- Use the same exported \`style.css\` on every page so the type, colors, and spacing stay consistent.\n- Use headings in order, beginning with one \`h1\`, then moving through lower heading levels as the content needs them.\n- Keep underlined links and visible keyboard focus so people can find and use interactive content.\n\n### Don't\n\n- Create one-off colors, font sizes, or spacing values when an exported choice already fits the purpose.\n- Rely on color alone to communicate meaning; use clear text, labels, or icons too.\n- Change a design decision in only one file. Update the form and export a fresh set of files when the system changes.\n`;
 }
 function specimen(design) {
+  if (isProject2) return project2Specimen(design);
   // Edit this HTML template to change the copy shown in the Live specimen.
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${css(design)}</style></head><body><header><p>${escape(design.name)}</p><nav><a href="#!">Nav Link 1</a> · <a href="#!">Nav Link 2</a></nav></header><main><section id="guide"><h1>This is the title of the page</h1><p>In web design, typography sets the voice. Color adds conveys mood, directs attention and provides differentiation. Space groups and separates elments, giving them room to breathe.</p><h2>This is a level 2 heading</h2><p>Headings organize the setions of the page and body text is the core of the content. <a href="#!">An underlined link</a> helps people to navigate through the site.</p><ul><li>Use headings in a meaningful order.</li><li>Keep paragraphs comfortable to read.</li></ul></section><section class="alternate" id="next"><h3>This level 3 heading is in an alternate color space.</h3><p>This has heading and text and a button in alternate colors.</p><a class="button" href="#!">This is a button</a></section></main><footer><p>This example was made with your type, color, and spacing choices.</p></footer></body></html>`;
 }
 function escape(value) { return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]); }
 function render(design, errors) {
   const checks = contrastChecks(design), failures = checks.filter((check) => !check.pass).length;
-  files = { 'style.css': css(design), 'design-tokens.json': `${JSON.stringify(tokenTree(design), null, 2)}\n`, 'design.md': designMd(design) };
+  files = { [isProject2 ? 'tokens.css' : 'style.css']: css(design), 'design-tokens.json': `${JSON.stringify(tokenTree(design), null, 2)}\n`, 'design.md': isProject2 ? project2DesignMd(design) : designMd(design) };
   isValid = !errors.length;
   $('#preview').srcdoc = specimen(design); $('#preview').classList.toggle('narrow', narrow);
   $('#preview-notice').hidden = !errors.length; $('#preview-notice').textContent = errors.length ? 'Fix the invalid fields to enable exports.' : '';
   const typeSizes = typeScale(design);
   const typeKey = [['body', design.rootSize], ['small', typeSizes.sm], ...headingTags.map((tag) => [tag, typeSizes[design.headingSizes[tag]]])];
   $('#type-key').innerHTML = typeKey.map(([name, size]) => `<span><strong>${name.toUpperCase()}</strong>${size}px</span>`).join('');
-  $('#spacing-ruler').innerHTML = Object.entries(spacing(design)).map(([step, value]) => `<div><span class="space-bar" style="width:${value * 16}px"></span><span>${step}</span><strong>${value * 16}px</strong></div>`).join('');
+  if (isProject2) {
+    $('#text-size-values').innerHTML = Object.entries(typeSizes).map(([step, size]) => {
+      const rem = round(size / design.rootSize);
+      return `<div><dt><code>--text-size-${textSizeName(step)}</code></dt><dd>${rem}rem · ${round(rem * design.rootSize)}px</dd></div>`;
+    }).join('');
+  }
+  const rulerRoot = isProject2 ? design.rootSize : 16;
+  $('#spacing-ruler').innerHTML = Object.entries(spacing(design)).map(([step, value]) => `<div><span class="space-bar" style="width:${isProject2 ? Number(step) * design.space : value * rulerRoot}px"></span><span>${isProject2 ? `space-${step}` : step}</span><strong>${round(value * rulerRoot)}px</strong></div>`).join('');
   $('#contrast-summary').className = `contrast-summary ${failures ? 'needs-work' : ''}`;
-  $('#contrast-summary').innerHTML = `<strong>${failures ? `${failures} color pair${failures === 1 ? '' : 's'} to revisit` : 'All 6 text pairs meet 4.5:1'}</strong><p>Our target is WCAG AA contrast for normal text.</p><ul class="contrast-list">${checks.map((check) => `<li><span>${check.label}</span><strong class="${check.pass ? 'pass' : 'fail'}">${check.pass ? 'Pass' : 'Adjust'} · ${check.ratio.toFixed(2)}:1</strong></li>`).join('')}</ul>`;
+  $('#contrast-summary').innerHTML = `<strong>${failures ? `${failures} color pair${failures === 1 ? '' : 's'} to revisit` : `All ${checks.length} text pairs meet 4.5:1`}</strong><p>Our target is WCAG AA contrast for normal text.</p><ul class="contrast-list">${checks.map((check) => `<li><span>${check.label}</span><strong class="${check.pass ? 'pass' : 'fail'}">${check.pass ? 'Pass' : 'Adjust'} · ${check.ratio.toFixed(2)}:1</strong></li>`).join('')}</ul>`;
   $('#errors').hidden = !errors.length; $('#errors').innerHTML = `<strong>Fix these before exporting:</strong><ul>${errors.map((error) => `<li>${escape(error)}</li>`).join('')}</ul>`;
   $('#warning').hidden = !failures; $('#warning').textContent = failures ? `Your color choices still include ${failures} contrast issue${failures === 1 ? '' : 's'}. Revise those pairs before submitting.` : '';
   $$('[data-download], #copy').forEach((button) => button.disabled = !isValid);
