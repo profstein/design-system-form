@@ -158,22 +158,104 @@ a:focus-visible, button:focus-visible {
 }
 
 function project2DesignMd(design) {
-  const spaces = spacing(design);
-  const measuredContrast = contrastChecks(design).map((check) => `- ${check.label}: ${check.ratio.toFixed(2)}:1 — ${check.pass ? 'meets' : 'below'} the 4.5:1 target for normal text.`).join('\n');
-  const contrastGuidance = `Aim for WCAG AAA contrast for normal text; WCAG AA is the minimum. Check the following text/background pairings, including hover states:\n\n${contrastChecks(design).map((check) => `- ${check.label}`).join('\n')}`;
-  const layout = `layout:\n  pageWidth: ${design.pageWidth}px\n  gridGap: ${spaces[design.gridGap]}rem\n  sectionSpacing: ${spaces[design.sectionSpacing]}rem\n  contentPadding: ${spaces[design.contentPadding]}rem\n`;
-  return designMd(design)
-    .replaceAll('style.css', 'tokens.css')
-    .replace(measuredContrast, contrastGuidance)
-    .replace('version: alpha', 'version: 2\nproject: 2')
-    .replace(`  rootSize: ${design.rootSize}px`, `  rootSize: ${design.rootSize}px\n  lineHeight: ${design.lineHeight}\n  headingLineHeight: ${design.headingLineHeight}`)
-    .replace('Links and buttons use the action color, then hover on pointer hover. Button text uses buttonText.', 'Default links and button backgrounds use action and hover; default button text uses buttonText. Within .alternate sections, links and button backgrounds use alternateAction and alternateHover; button text uses alternateButtonText (the Alternate buttons choice).')
-    .replace('omitted: [rounded]', 'omitted: [rounded, line-length]')
-    .replace('\n---\n\n## Overview', `\n${layout}---\n\n## Overview`)
-    .replace('All size values use rem', `Use a default line height of ${design.lineHeight} and a heading line height of ${design.headingLineHeight}. Both are unitless multipliers. All size values use rem`)
-    .replace(`Default line height is ${design.lineHeight}. `, '')
-    .replace('Default page width is', `Use a maximum page width of ${design.pageWidth}px. Text wraps within its containing element; there is no separate line-length variable. Use a grid gap of ${spaces[design.gridGap]}rem (space-${design.gridGap}) and section spacing of ${spaces[design.sectionSpacing]}rem (space-${design.sectionSpacing}). Use content padding of ${spaces[design.contentPadding]}rem (space-${design.contentPadding}) inside sections. When building a grid, use \`--grid-gap\` only between items and \`--content-padding\` outside the grid. The preview grid layout is an example, not a rule included in the exported stylesheet.\n\nDefault page width is`)
-    + `\n## CSS variables and AI guidance\n\nUse this guide together with the exported \`tokens.css\`. Link tokens.css first, then your own stylesheet (for example, style.css). Keep your project-specific rules, including responsive image styling, in your own stylesheet and reuse the variables from tokens.css. Keep the chosen colors, type scale, spacing, and layout consistent when creating or editing pages.\n\n- Typography uses \`--text-size-*\`, \`--base-family\`, \`--headings-family\`, \`--line-height-base\`, and \`--line-height-headings\`. The CSS scale uses \`2xl\` and \`3xl\` for the form's xxl and xxxl sizes.\n- Default colors map to \`--primary-text\` and \`--primary-background\`; alternate colors map to \`--alternate-text\` and \`--alternate-background\`. Use \`--action\`, \`--action-hover\`, and \`--button-text\` for default interactive elements. Alternate sections use \`--alternate-action\`, \`--alternate-action-hover\`, and \`--alternate-button-text\`; these override the local action and button text variables.\n- Spacing uses \`--space-unit\` and \`--space-1\`, \`--space-2\`, \`--space-3\`, \`--space-4\`, \`--space-6\`, \`--space-8\`, \`--space-12\`, \`--space-16\`, \`--space-24\`, and \`--space-32\`. Each number multiplies the ${design.space}px base unit.\n- Layout uses \`--page-width\`, \`--grid-gap\`, \`--section-spacing\`, and \`--content-padding\`. Grid gap, section spacing, and content padding reference the spacing scale.\n- Reuse these variables in new CSS rules instead of repeating their values or inventing new design choices. Ask before changing the design system.\n- Preserve semantic HTML, visible keyboard focus, responsive layouts, and underlined text links.\n\n### Example AI request\n\nRead design.md and tokens.css before editing. Build the requested page using the existing design variables and layout rules. If a grid fits the content, create its layout using the existing grid gap and content padding variables. Explain any additional design decision before changing the system.\n`;
+  const colorTokens = {
+    defaultText: '--primary-text', defaultBackground: '--primary-background',
+    action: '--action', hover: '--action-hover', buttonText: '--button-text',
+    alternateText: '--alternate-text', alternateBackground: '--alternate-background',
+    alternateAction: '--alternate-action', alternateHover: '--alternate-action-hover', alternateButtonText: '--alternate-button-text'
+  };
+  const steps = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+  const reference = (name) => `var(${name})`;
+  const yamlReference = (name) => JSON.stringify(reference(name));
+  const contrastPairs = [
+    ['--primary-text', '--primary-background'], ['--action', '--primary-background'],
+    ['--action-hover', '--primary-background'], ['--button-text', '--action'], ['--button-text', '--action-hover'],
+    ['--alternate-text', '--alternate-background'], ['--alternate-action', '--alternate-background'],
+    ['--alternate-action-hover', '--alternate-background'], ['--alternate-button-text', '--alternate-action'],
+    ['--alternate-button-text', '--alternate-action-hover']
+  ];
+  return `---
+version: 2
+project: 2
+name: ${JSON.stringify(design.name)}
+description: ${JSON.stringify(design.intent)}
+tokensFile: "tokens.css"
+colors:
+${Object.entries(colorTokens).map(([role, token]) => `  ${role}: ${yamlReference(token)}`).join('\n')}
+typography:
+  rootSizeSource: "html font-size in tokens.css"
+  bodyFamily: ${yamlReference('--base-family')}
+  headingFamily: ${yamlReference('--headings-family')}
+  bodySize: ${yamlReference('--text-size-md')}
+  smallSize: ${yamlReference('--text-size-sm')}
+  bodyLineHeight: ${yamlReference('--line-height-base')}
+  headingLineHeight: ${yamlReference('--line-height-headings')}
+textScale:
+${['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'].map((step) => `  ${step}: ${yamlReference(`--text-size-${step}`)}`).join('\n')}
+headingSizes:
+${headingTags.map((tag) => `  ${tag}: ${yamlReference(`--text-size-${textSizeName(design.headingSizes[tag])}`)}`).join('\n')}
+spacing:
+  base: ${yamlReference('--space-unit')}
+${steps.map((step) => `  space-${step}: ${yamlReference(`--space-${step}`)}`).join('\n')}
+layout:
+  pageWidth: ${yamlReference('--page-width')}
+  gridGap: ${yamlReference('--grid-gap')}
+  sectionSpacing: ${yamlReference('--section-spacing')}
+  contentPadding: ${yamlReference('--content-padding')}
+---
+
+# Design system
+
+## Overview
+
+${design.intent || 'Use the selected typography, palettes, and spacing consistently across the website.'}
+
+This guide describes the choices in tokens.css. Use the CSS variables above rather than copying their values. Keep design.md and tokens.css in your project folder, and link tokens.css before your own stylesheet on every page. Add page-specific styling in your own stylesheet.
+
+## Colors
+
+Use \`var(--primary-text)\` on \`var(--primary-background)\` for the default palette. Add the alternate class to use \`var(--alternate-text)\` on \`var(--alternate-background)\`.
+
+Default links and button backgrounds use \`var(--action)\` and \`var(--action-hover)\`; button text uses \`var(--button-text)\`. In alternate areas, use \`var(--alternate-action)\`, \`var(--alternate-action-hover)\`, and \`var(--alternate-button-text)\`. Keep links underlined.
+
+### Contrast targets
+
+Aim for WCAG AAA contrast for normal text; WCAG AA is the minimum. Check these text/background pairings, including hover states:
+
+${contrastPairs.map(([text, background]) => `- \`${reference(text)}\` on \`${reference(background)}\``).join('\n')}
+
+## Typography
+
+Use \`var(--base-family)\` for body text and \`var(--headings-family)\` for headings. Body text uses \`var(--text-size-md)\`, small text uses \`var(--text-size-sm)\`, and each heading uses its selected variable in headingSizes above.
+
+Use \`var(--line-height-base)\` for body line height and \`var(--line-height-headings)\` for heading line height. The html rule in tokens.css sets the root size; rem-based sizes scale from it. The form's xxl and xxxl labels correspond to --text-size-2xl and --text-size-3xl.
+
+## Spacing and layout
+
+Use the spacing variables listed above. Each --space-N token is a multiplier of \`var(--space-unit)\`.
+
+- \`var(--page-width)\`: maximum page width.
+- \`var(--grid-gap)\`: space between grid items, not around the grid.
+- \`var(--section-spacing)\`: space between sections.
+- \`var(--content-padding)\`: padding inside sections, outside a nested grid.
+
+Read tokens.css to see which spacing step each layout variable uses. Text wraps within its containing element; there is no separate line-length variable.
+
+## Do and Don't
+
+### Do
+
+- Use the same tokens.css on every page to keep the design consistent.
+- Reuse the CSS variables for colors, typography, spacing, and layout.
+- Use headings in order, beginning with one page-title h1.
+- Keep underlined links and visible keyboard focus.
+
+### Don't
+
+- Add one-off design values when an existing variable fits.
+- Rely on color alone to communicate meaning.
+- Change a design choice in only one exported file. Update the form and export a fresh set of files when the design changes.
+`;
 }
 
 // Preview-only border and grid rules demonstrate the exported design tokens.

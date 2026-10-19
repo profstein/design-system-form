@@ -51,7 +51,7 @@ Variables follow the Project 2 reference naming: `--text-size-*`, `--base-family
 
 The `:root` block separates Typographic Styles, Color Styles, Spacing Units, and Layout Styles. `--page-width` controls the maximum container width; `--grid-gap`, `--section-spacing`, and `--content-padding` reference chosen spacing variables. Project 2 offers 4px, 5px, and 8px base units; its spacing variables use multipliers 1, 2, 3, 4, 6, 8, 12, 16, 24, and 32 (for example, `--space-4` is four times the base). Section spacing starts at space-4; content padding starts at space-2; grid gap offers the full scale. Content padding applies inside every section. There is no separate `--line-length`. Grid gap and content padding default to space-4. The example grid layout and default-section border appear only in the live preview and are excluded from the stylesheet download.
 
-The live example uses the generated CSS plus preview-only grid layout and border rules. Project 2's JSON exports include matching layout dimensions in pixels for Figma; its Markdown includes layout choices, guidance for AI to reuse the system, and contrast pairings targeting WCAG AAA ideally and AA at minimum without reporting measured ratios.
+The live example uses the generated CSS plus preview-only grid layout and border rules. Project 2's JSON exports include matching layout dimensions in pixels for Figma; its Markdown references CSS variables rather than repeating resolved values. It keeps the design intention, selected heading mappings, basic color and layout guidance, do/don't reminders, and contrast pairings targeting WCAG AAA ideally and AA at minimum without reporting measured ratios. Component descriptions and Copilot configuration are left for a later project.
 
 ## Version path
 
